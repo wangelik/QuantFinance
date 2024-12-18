@@ -9,8 +9,8 @@ class StockSimulation:
     """General class to simulate stock returns using different distributions
 
     Properties:
-        mu      (float): estimated annualized return
-        sigma   (float): estimated standard deviation of annualized returns
+        mu      (float): estimated mean of annualized raw returns
+        sigma   (float): estimated standard deviation of annualized raw returns
         start   (float): start price
         reps    (int): simulation size / repetition
         dt      (float): time step size (parts of year)
@@ -22,11 +22,13 @@ class StockSimulation:
 
     Methods:
         gaussian    assume normal (Gaussian) raw returns
-        gbm         assume log-normal raw returns (Geometric Brownian Motion)
+        gbm         assume normal (Gaussian) log returns (Geometric Brownian Motion)
 
     Note:
-        Class remembers used algorithms, internal states and sends alerts
-        if settings are changed during runtime.
+        1)  Class remembers used algorithms, internal states and sends alerts
+            if settings are changed during runtime.
+        2)  Methods are optimized for speed by vectorized executions.
+        3)  Monte Carlo random walk schemes are used for simulations.
     """
 
     # init settings
@@ -135,12 +137,13 @@ class StockSimulation:
 
         Note:
             method motivated by discrete version of GBM PDE:
-            delta_S/S = mu * delta_t + sigma * sqrt(delta_t) * N(0,1)
+            1) S: stock price, N: normal distribution, delta_t: time step
+            2) delta_S/S = mu * delta_t + sigma * sqrt(delta_t) * N(0,1)
         """
 
         # printing settings
         self.__vprint(
-            f"[+] Running Gaussian Simulation for mu={self._mu}, "
+            f"[+] Running Gaussian simulation for mu={self._mu}, "
             f"sigma={self._sigma}, dt={self._dt}, n={self._n}, "
             f"reps={self.reps}, start={self._start}"
         )
@@ -173,14 +176,15 @@ class StockSimulation:
 
         Note:
             method motivated by exact (continuous) version of GBM PDE (Ito):
-            d_S/S = mu * d_t + sigma * d_W(t) =>
-            d_S/S = mu * d_t + sigma * sqrt(d_t) * N(0,1) [W(t)] =>
-            ln(S_dt/S_0) = (mu - sigma^2/2)dt + sigma * sqrt(d_t) * N(0,1) [W(t)]
+            1) S: stock price, N: normal distribution, d_t: time step
+            2) W(t) Wiener process / Brownian Motion
+            3) d_S/S = mu * d_t + sigma * d_W(t) =>
+            4) ln(S_dt/S_0) = (mu - sigma^2/2)dt + sigma * sqrt(d_t) * N(0,1) [W(t)]
         """
 
         # printing settings
         self.__vprint(
-            f"[+] Running GBM Simulation for mu={self._mu}, "
+            f"[+] Running GBM simulation for mu={self._mu}, "
             f"sigma={self._sigma}, dt={self._dt}, n={self._n}, "
             f"reps={self.reps}, start={self._start}"
         )
@@ -204,7 +208,7 @@ class StockSimulation:
         return self._rets, self._logrets, self._prices
 
     def __vprint(self, info: str) -> None:
-        """Verbose-based print utility function"""
+        """Verbosity-based stdout utility function"""
         if self.verbose:
             print(info)
 
